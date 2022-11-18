@@ -1,4 +1,7 @@
 from flask import Flask
+from flask import redirect
+import logging
+import traceback
 
 app = Flask(__name__)
 
@@ -35,5 +38,33 @@ def limparBanco():
     logging.exception(e)
     return flask.render_template('contatos.html')
 
+@app.route('/delete/<email>', methods=['POST'])
+def delete(email):
+  try:
+    contatos = db.get('contatos',{});
+    del contatos[email];
+    db['contatos'] = contatos;
+    return redirect('/')
+  except Exception as e:
+    logging.exception(e)
+    return flask.render_template('contatos.html')
+
+@app.route('/update/<email>', methods=['POST'])
+def update(email):
+  try:
+    if flask.request.method == "POST":
+      contatos = db.get('contatos',{});
+      contato = {};
+      contato = {'email': email,
+                 'nome': contatos[email]['nome'],
+                 'telefone': contatos[email]['telefone'],
+                 'assunto': contatos[email]['assunto'], 
+                 'mensagem': contatos[email]['mensagem'],
+                 'chk': contatos[email]['chk']};
+      print(contato);
+      return flask.render_template('contato.html', contato=contato)
+  except Exception as e:
+    logging.exception(e)
+    return flask.render_template('contatos.html')
 
 app.run(host='0.0.0.0', port=81)
